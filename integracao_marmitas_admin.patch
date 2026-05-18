@@ -1,0 +1,1028 @@
+[1mdiff --git a/client/src/pages/Cardapio.tsx b/client/src/pages/Cardapio.tsx[m
+[1mindex ca63898..3a2c166 100644[m
+[1m--- a/client/src/pages/Cardapio.tsx[m
+[1m+++ b/client/src/pages/Cardapio.tsx[m
+[36m@@ -33,6 +33,7 @@[m [mimport {[m
+   EyeOff,[m
+   Loader2,[m
+   DollarSign,[m
+[32m+[m[32m  Image as ImageIcon,[m
+ } from "lucide-react";[m
+ import { useState, useEffect } from "react";[m
+ import { toast } from "sonner";[m
+[36m@@ -178,6 +179,21 @@[m [mexport default function Cardapio() {[m
+                     <Card key={item.id} className={`hover:shadow-md transition-shadow ${!item.available ? "opacity-60" : ""}`}>[m
+                       <CardContent className="p-4">[m
+                         <div className="flex items-start justify-between gap-4">[m
+[32m+[m[32m                          <div className="w-24 h-24 rounded-xl overflow-hidden bg-muted shrink-0 border border-border">[m
+[32m+[m[32m                            {item.imageUrl ? ([m
+[32m+[m[32m                              <img[m
+[32m+[m[32m                                src={item.imageUrl}[m
+[32m+[m[32m                                alt={item.name}[m
+[32m+[m[32m                                className="w-full h-full object-cover"[m
+[32m+[m[32m                                loading="lazy"[m
+[32m+[m[32m                              />[m
+[32m+[m[32m                            ) : ([m
+[32m+[m[32m                              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">[m
+[32m+[m[32m                                <ImageIcon className="w-5 h-5 opacity-50" />[m
+[32m+[m[32m                                <span className="text-[10px]">Sem foto</span>[m
+[32m+[m[32m                              </div>[m
+[32m+[m[32m                            )}[m
+[32m+[m[32m                          </div>[m
+                           <div className="flex-1 min-w-0">[m
+                             <div className="flex items-center gap-2 mb-1">[m
+                               <p className="font-semibold text-foreground truncate">{item.name}</p>[m
+[36m@@ -312,6 +328,7 @@[m [mfunction ItemDialog({ open, item, categories, onClose, onSuccess }: any) {[m
+   const [name, setName] = useState("");[m
+   const [description, setDescription] = useState("");[m
+   const [price, setPrice] = useState("");[m
+[32m+[m[32m  const [imageUrl, setImageUrl] = useState("");[m
+   const [available, setAvailable] = useState(true);[m
+ [m
+   useEffect(() => {[m
+[36m@@ -320,12 +337,14 @@[m [mfunction ItemDialog({ open, item, categories, onClose, onSuccess }: any) {[m
+       setName(item.name);[m
+       setDescription(item.description || "");[m
+       setPrice(item.price);[m
+[32m+[m[32m      setImageUrl(item.imageUrl || "");[m
+       setAvailable(item.available);[m
+     } else if (open && !item) {[m
+       setCategoryId("");[m
+       setName("");[m
+       setDescription("");[m
+       setPrice("");[m
+[32m+[m[32m      setImageUrl("");[m
+       setAvailable(true);[m
+     }[m
+   }, [open, item]);[m
+[36m@@ -348,6 +367,7 @@[m [mfunction ItemDialog({ open, item, categories, onClose, onSuccess }: any) {[m
+       name,[m
+       description: description || undefined,[m
+       price: String(price),[m
+[32m+[m[32m      imageUrl: imageUrl.trim() || undefined,[m
+       available,[m
+     };[m
+     if (item) update.mutate({ id: item.id, ...payload });[m
+[36m@@ -386,6 +406,15 @@[m [mfunction ItemDialog({ open, item, categories, onClose, onSuccess }: any) {[m
+             <label className="text-xs font-medium text-muted-foreground mb-1 block">Preço (R$) *</label>[m
+             <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} min="0.01" step="0.01" placeholder="0,00" />[m
+           </div>[m
+[32m+[m[32m          <div>[m
+[32m+[m[32m            <label className="text-xs font-medium text-muted-foreground mb-1 block">URL da foto do prato</label>[m
+[32m+[m[32m            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://.../foto-do-prato.webp" />[m
+[32m+[m[32m            {imageUrl.trim() && ([m
+[32m+[m[32m              <div className="mt-2 rounded-xl overflow-hidden border border-border bg-muted h-36">[m
+[32m+[m[32m                <img src={imageUrl} alt="Prévia do prato" className="w-full h-full object-cover" />[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            )}[m
+[32m+[m[32m          </div>[m
+           <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">[m
+             <input[m
+               type="checkbox"[m
+[1mdiff --git a/server/integration-api.ts b/server/integration-api.ts[m
+[1mindex 17e8e67..b6bb783 100644[m
+[1m--- a/server/integration-api.ts[m
+[1m+++ b/server/integration-api.ts[m
+[36m@@ -1,12 +1,9 @@[m
+ /**[m
+[31m- * API pública de integração para o site dos clientes (marmitadel-kqvqpftc.manus.space)[m
+[31m- * [m
+[32m+[m[32m * API pública de integração para o site dos clientes.[m
+[32m+[m[32m *[m
+  * Endpoints:[m
+  * - GET /api/integration/menu - Retorna o cardápio disponível[m
+  * - POST /api/integration/orders - Cria um novo pedido a partir do site[m
+[31m- * [m
+[31m- * Documentação:[m
+[31m- * https://panelavelha-2cnz98kw.manus.space/docs/integration[m
+  */[m
+ [m
+ import { Router, Request, Response } from "express";[m
+[36m@@ -18,6 +15,149 @@[m [mimport { eq } from "drizzle-orm";[m
+ [m
+ const router = Router();[m
+ [m
+[32m+[m[32mtype IncomingOrderItem = {[m
+[32m+[m[32m  menuItemId?: number | string;[m
+[32m+[m[32m  id?: number | string;[m
+[32m+[m[32m  quantity?: number | string;[m
+[32m+[m[32m  qty?: number | string;[m
+[32m+[m[32m  notes?: string;[m
+[32m+[m[32m  productName?: string;[m
+[32m+[m[32m  name?: string;[m
+[32m+[m[32m  dish?: string;[m
+[32m+[m[32m  unitPrice?: number | string;[m
+[32m+[m[32m  price?: number | string;[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mtype NormalizedOrderItem = {[m
+[32m+[m[32m  menuItemId?: number;[m
+[32m+[m[32m  productName: string;[m
+[32m+[m[32m  quantity: number;[m
+[32m+[m[32m  unitPrice: string;[m
+[32m+[m[32m  notes?: string;[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mfunction asText(value: unknown): string | undefined {[m
+[32m+[m[32m  if (value === undefined || value === null) return undefined;[m
+[32m+[m[32m  const text = String(value).trim();[m
+[32m+[m[32m  return text.length > 0 ? text : undefined;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction asPositiveNumber(value: unknown, fallback = 0): number {[m
+[32m+[m[32m  const parsed = Number(value);[m
+[32m+[m[32m  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction joinAddress(address: unknown): string | undefined {[m
+[32m+[m[32m  if (!address) return undefined;[m
+[32m+[m[32m  if (typeof address === "string") return asText(address);[m
+[32m+[m[32m  if (typeof address !== "object") return undefined;[m
+[32m+[m
+[32m+[m[32m  const data = address as Record<string, unknown>;[m
+[32m+[m[32m  return [[m
+[32m+[m[32m    data.rua ?? data.street,[m
+[32m+[m[32m    data.numero ?? data.number,[m
+[32m+[m[32m    data.complemento ?? data.complement,[m
+[32m+[m[32m    data.cep ?? data.zipCode,[m
+[32m+[m[32m    data.cidade ?? data.city,[m
+[32m+[m[32m    data.estado ?? data.state,[m
+[32m+[m[32m  ][m
+[32m+[m[32m    .map(asText)[m
+[32m+[m[32m    .filter(Boolean)[m
+[32m+[m[32m    .join(", ") || undefined;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction parseItemsPayload(items: unknown): IncomingOrderItem[] {[m
+[32m+[m[32m  if (Array.isArray(items)) return items as IncomingOrderItem[];[m
+[32m+[m
+[32m+[m[32m  if (typeof items === "string") {[m
+[32m+[m[32m    return items[m
+[32m+[m[32m      .split(",")[m
+[32m+[m[32m      .map((raw) => raw.trim())[m
+[32m+[m[32m      .filter(Boolean)[m
+[32m+[m[32m      .map((raw) => {[m
+[32m+[m[32m        const quantityMatch = raw.match(/\((\d+)x\)/i);[m
+[32m+[m[32m        const quantity = quantityMatch ? Number(quantityMatch[1]) : 1;[m
+[32m+[m[32m        const productName = raw.replace(/\s*\(\d+x\)\s*/i, "").trim();[m
+[32m+[m[32m        return { productName, quantity };[m
+[32m+[m[32m      });[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  return [];[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32masync function normalizeOrderItems(items: unknown): Promise<NormalizedOrderItem[]> {[m
+[32m+[m[32m  const db = await getDb();[m
+[32m+[m[32m  const incomingItems = parseItemsPayload(items);[m
+[32m+[m[32m  const normalized: NormalizedOrderItem[] = [];[m
+[32m+[m
+[32m+[m[32m  for (const item of incomingItems) {[m
+[32m+[m[32m    const menuItemId = asPositiveNumber(item.menuItemId ?? item.id, 0);[m
+[32m+[m[32m    const quantity = Math.max(1, Math.floor(asPositiveNumber(item.quantity ?? item.qty, 1)));[m
+[32m+[m
+[32m+[m[32m    if (db && menuItemId > 0) {[m
+[32m+[m[32m      const [menuItem] = await db[m
+[32m+[m[32m        .select()[m
+[32m+[m[32m        .from(menuItems)[m
+[32m+[m[32m        .where(eq(menuItems.id, menuItemId))[m
+[32m+[m[32m        .limit(1);[m
+[32m+[m
+[32m+[m[32m      if (menuItem) {[m
+[32m+[m[32m        normalized.push({[m
+[32m+[m[32m          menuItemId,[m
+[32m+[m[32m          productName: menuItem.name,[m
+[32m+[m[32m          quantity,[m
+[32m+[m[32m          unitPrice: String(menuItem.price),[m
+[32m+[m[32m          notes: asText(item.notes),[m
+[32m+[m[32m        });[m
+[32m+[m[32m        continue;[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    const productName = asText(item.productName ?? item.name ?? item.dish);[m
+[32m+[m[32m    if (!productName) continue;[m
+[32m+[m
+[32m+[m[32m    normalized.push({[m
+[32m+[m[32m      productName,[m
+[32m+[m[32m      quantity,[m
+[32m+[m[32m      unitPrice: String(asPositiveNumber(item.unitPrice ?? item.price, 0).toFixed(2)),[m
+[32m+[m[32m      notes: asText(item.notes),[m
+[32m+[m[32m    });[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  return normalized;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction buildOrderNotes(body: Record<string, unknown>, address?: string): string | undefined {[m
+[32m+[m[32m  const existingNotes = asText(body.notes);[m
+[32m+[m[32m  const discount = asPositiveNumber(body.discount, 0);[m
+[32m+[m[32m  const shipping = asPositiveNumber(body.shipping, 0);[m
+[32m+[m[32m  const subtotal = asPositiveNumber(body.subtotal, 0);[m
+[32m+[m[32m  const changeValue = asPositiveNumber(body.changeValue, 0);[m
+[32m+[m
+[32m+[m[32m  const notes = [[m
+[32m+[m[32m    existingNotes,[m
+[32m+[m[32m    address ? `Endereço: ${address}` : undefined,[m
+[32m+[m[32m    subtotal > 0 ? `Subtotal informado pelo site: R$ ${subtotal.toFixed(2)}` : undefined,[m
+[32m+[m[32m    shipping > 0 ? `Frete informado pelo site: R$ ${shipping.toFixed(2)}` : undefined,[m
+[32m+[m[32m    discount > 0 ? `Desconto informado pelo site: R$ ${discount.toFixed(2)}` : undefined,[m
+[32m+[m[32m    changeValue > 0 ? `Troco para: R$ ${changeValue.toFixed(2)}` : undefined,[m
+[32m+[m[32m  ].filter(Boolean);[m
+[32m+[m
+[32m+[m[32m  return notes.length ? notes.join("\n") : undefined;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mrouter.use((req, res, next) => {[m
+[32m+[m[32m  res.header("Access-Control-Allow-Origin", "*");[m
+[32m+[m[32m  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");[m
+[32m+[m[32m  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");[m
+[32m+[m
+[32m+[m[32m  if (req.method === "OPTIONS") {[m
+[32m+[m[32m    return res.sendStatus(204);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  next();[m
+[32m+[m[32m});[m
+[32m+[m
+ // ─── GET /api/integration/menu ─────────────────────────────────────────────────[m
+ /**[m
+  * Retorna o cardápio disponível (categorias + pratos disponíveis)[m
+[36m@@ -64,26 +204,32 @@[m [mrouter.get("/menu/full", async (req: Request, res: Response) => {[m
+ [m
+ // ─── POST /api/integration/orders ──────────────────────────────────────────────[m
+ /**[m
+[31m- * Cria um novo pedido a partir do site dos clientes[m
+[31m- * [m
+[31m- * Body:[m
+[32m+[m[32m * Cria um novo pedido a partir do site dos clientes.[m
+[32m+[m[32m *[m
+[32m+[m[32m * Aceita tanto o contrato oficial:[m
+[32m+[m[32m * {[m
+[32m+[m[32m *   customerName, customerPhone,[m
+[32m+[m[32m *   items: [{ menuItemId, quantity, notes }],[m
+[32m+[m[32m *   notes, paymentMethod[m
+[32m+[m[32m * }[m
+[32m+[m[32m *[m
+[32m+[m[32m * quanto o formato legado/simplificado enviado pelo site:[m
+  * {[m
+[31m- *   "customerName": "João Silva",[m
+[31m- *   "customerPhone": "11999999999",[m
+[31m- *   "items": [[m
+[31m- *     { "menuItemId": 1, "quantity": 2, "notes": "Sem cebola" },[m
+[31m- *     { "menuItemId": 3, "quantity": 1 }[m
+[31m- *   ],[m
+[31m- *   "notes": "Entrega rápida se possível",[m
+[31m- *   "paymentMethod": "Pix"[m
+[32m+[m[32m *   client, phone, address,[m
+[32m+[m[32m *   items: [{ name, price, quantity }] ou "Prato (1x), Bebida (1x)",[m
+[32m+[m[32m *   total, paymentMethod, discount, shipping, subtotal[m
+  * }[m
+  */[m
+ router.post("/orders", async (req: Request, res: Response) => {[m
+   try {[m
+[31m-    const { customerName, customerPhone, items, notes, paymentMethod } = req.body;[m
+[32m+[m[32m    const body = req.body as Record<string, unknown>;[m
+[32m+[m[32m    const customerName = asText(body.customerName ?? body.clientName ?? body.client);[m
+[32m+[m[32m    const customerPhone = asText(body.customerPhone ?? body.clientPhone ?? body.phone);[m
+[32m+[m[32m    const paymentMethod = asText(body.paymentMethod);[m
+[32m+[m[32m    const address = joinAddress(body.address ?? body.clientAddress);[m
+[32m+[m[32m    const normalizedItems = await normalizeOrderItems(body.items);[m
+ [m
+[31m-    // Validação básica[m
+[31m-    if (!customerName || !items || items.length === 0) {[m
+[32m+[m[32m    if (!customerName || normalizedItems.length === 0) {[m
+       return res.status(400).json({[m
+         success: false,[m
+         error: "Nome do cliente e itens são obrigatórios",[m
+[36m@@ -98,43 +244,14 @@[m [mrouter.post("/orders", async (req: Request, res: Response) => {[m
+       });[m
+     }[m
+ [m
+[31m-    // Buscar preços dos itens no cardápio[m
+[31m-    const menuItemIds = items.map((i: any) => i.menuItemId);[m
+[31m-    const menuItemsData = await db[m
+[31m-      .select()[m
+[31m-      .from(menuItems)[m
+[31m-      .where(eq(menuItems.id, menuItemIds[0]));[m
+[31m-[m
+[31m-    // Calcular total[m
+[31m-    let totalAmount = 0;[m
+[31m-    const orderItemsData = [];[m
+[31m-[m
+[31m-    for (const item of items) {[m
+[31m-      const menuItem = await db[m
+[31m-        .select()[m
+[31m-        .from(menuItems)[m
+[31m-        .where(eq(menuItems.id, item.menuItemId))[m
+[31m-        .limit(1);[m
+[31m-[m
+[31m-      if (!menuItem || menuItem.length === 0) {[m
+[31m-        return res.status(400).json({[m
+[31m-          success: false,[m
+[31m-          error: `Item ${item.menuItemId} não encontrado no cardápio`,[m
+[31m-        });[m
+[31m-      }[m
+[31m-[m
+[31m-      const itemTotal = Number(menuItem[0].price) * item.quantity;[m
+[31m-      totalAmount += itemTotal;[m
+[31m-[m
+[31m-      orderItemsData.push({[m
+[31m-        productName: menuItem[0].name,[m
+[31m-        quantity: item.quantity,[m
+[31m-        unitPrice: menuItem[0].price,[m
+[31m-        notes: item.notes,[m
+[31m-      });[m
+[31m-    }[m
+[32m+[m[32m    const calculatedTotal = normalizedItems.reduce([m
+[32m+[m[32m      (sum, item) => sum + Number(item.unitPrice) * item.quantity,[m
+[32m+[m[32m      0[m
+[32m+[m[32m    );[m
+[32m+[m[32m    const informedTotal = asPositiveNumber(body.total, 0);[m
+[32m+[m[32m    const totalAmount = informedTotal > 0 ? informedTotal : calculatedTotal;[m
+[32m+[m[32m    const notes = buildOrderNotes(body, address);[m
+ [m
+[31m-    // Criar pedido[m
+     const [result] = await db.insert(orders).values({[m
+       customerName,[m
+       customerPhone,[m
+[36m@@ -146,20 +263,19 @@[m [mrouter.post("/orders", async (req: Request, res: Response) => {[m
+ [m
+     const orderId = (result as any).insertId;[m
+ [m
+[31m-    // Adicionar itens do pedido[m
+[31m-    if (orderItemsData.length > 0) {[m
+[31m-      await db.insert(orderItems).values([m
+[31m-        orderItemsData.map((item) => ({[m
+[31m-          orderId,[m
+[31m-          ...item,[m
+[31m-        }))[m
+[31m-      );[m
+[31m-    }[m
+[32m+[m[32m    await db.insert(orderItems).values([m
+[32m+[m[32m      normalizedItems.map((item) => ({[m
+[32m+[m[32m        orderId,[m
+[32m+[m[32m        productName: item.productName,[m
+[32m+[m[32m        quantity: item.quantity,[m
+[32m+[m[32m        unitPrice: item.unitPrice,[m
+[32m+[m[32m        notes: item.notes,[m
+[32m+[m[32m      }))[m
+[32m+[m[32m    );[m
+ [m
+[31m-    // Notificar o dono sobre novo pedido do site[m
+     await notifyOwner({[m
+[31m-      title: `📱 Novo Pedido do Site — ${customerName}`,[m
+[31m-      content: `Um novo pedido foi criado através do site dos clientes.\n\n**Cliente:** ${customerName}${customerPhone ? `\n**Telefone:** ${customerPhone}` : ""}\n**Total:** R$ ${totalAmount.toFixed(2)}\n**Itens:** ${orderItemsData.map((i) => `${i.quantity}x ${i.productName}`).join(", ")}\n\nAcesse o painel administrativo para gerenciar o pedido.`,[m
+[32m+[m[32m      title: `Novo Pedido do Site — ${customerName}`,[m
+[32m+[m[32m      content: `Um novo pedido foi criado através do site dos clientes.\n\n**Cliente:** ${customerName}${customerPhone ? `\n**Telefone:** ${customerPhone}` : ""}${address ? `\n**Endereço:** ${address}` : ""}\n**Total:** R$ ${totalAmount.toFixed(2)}\n**Itens:** ${normalizedItems.map((i) => `${i.quantity}x ${i.productName}`).join(", ")}\n\nAcesse o painel administrativo para gerenciar o pedido.`,[m
+     });[m
+ [m
+     res.json({[m
+[36m@@ -181,9 +297,6 @@[m [mrouter.post("/orders", async (req: Request, res: Response) => {[m
+ // ─── GET /api/integration/orders/:id ───────────────────────────────────────────[m
+ /**[m
+  * Retorna o status de um pedido criado pelo site[m
+[31m- * [m
+[31m- * Parâmetros:[m
+[31m- * - id: ID do pedido[m
+  */[m
+ router.get("/orders/:id", async (req: Request, res: Response) => {[m
+   try {[m
+[36m@@ -210,7 +323,6 @@[m [mrouter.get("/orders/:id", async (req: Request, res: Response) => {[m
+       });[m
+     }[m
+ [m
+[31m-    // Buscar itens do pedido[m
+     const orderItemsList = await db[m
+       .select()[m
+       .from(orderItems)[m
+[36m@@ -249,58 +361,34 @@[m [mrouter.get("/orders/:id", async (req: Request, res: Response) => {[m
+ router.get("/docs", (req: Request, res: Response) => {[m
+   res.json({[m
+     title: "API de Integração — Panela Velha",[m
+[31m-    version: "1.0.0",[m
+[31m-    baseUrl: "https://panelavelha-2cnz98kw.manus.space/api/integration",[m
+[32m+[m[32m    version: "1.1.0",[m
+[32m+[m[32m    baseUrl: "/api/integration",[m
+     endpoints: [[m
+       {[m
+         method: "GET",[m
+         path: "/menu",[m
+[31m-        description: "Retorna o cardápio disponível (categorias + pratos)",[m
+[32m+[m[32m        description: "Retorna o cardápio disponível (categorias + pratos, incluindo imageUrl quando cadastrado)",[m
+         authentication: "Não requerida",[m
+[31m-        response: {[m
+[31m-          success: true,[m
+[31m-          data: [[m
+[31m-            {[m
+[31m-              id: 1,[m
+[31m-              name: "Marmitas",[m
+[31m-              description: "Pratos principais",[m
+[31m-              items: [[m
+[31m-                {[m
+[31m-                  id: 1,[m
+[31m-                  categoryId: 1,[m
+[31m-                  name: "Marmita de Frango",[m
+[31m-                  description: "Frango com arroz, feijão e salada",[m
+[31m-                  price: "18.50",[m
+[31m-                  available: true,[m
+[31m-                },[m
+[31m-              ],[m
+[31m-            },[m
+[31m-          ],[m
+[31m-        },[m
+       },[m
+       {[m
+         method: "POST",[m
+         path: "/orders",[m
+[31m-        description: "Cria um novo pedido",[m
+[32m+[m[32m        description: "Cria um novo pedido vindo do site",[m
+         authentication: "Não requerida",[m
+         body: {[m
+           customerName: "João Silva",[m
+           customerPhone: "11999999999",[m
+[31m-          items: [[m
+[31m-            {[m
+[31m-              menuItemId: 1,[m
+[31m-              quantity: 2,[m
+[31m-              notes: "Sem cebola",[m
+[31m-            },[m
+[31m-          ],[m
+[32m+[m[32m          items: [{ menuItemId: 1, quantity: 2, notes: "Sem cebola" }],[m
+           notes: "Entrega rápida",[m
+           paymentMethod: "Pix",[m
+         },[m
+[31m-        response: {[m
+[31m-          success: true,[m
+[31m-          orderId: 123,[m
+[31m-          totalAmount: "37.00",[m
+[31m-          message: "Pedido criado com sucesso",[m
+[32m+[m[32m        legacyBodyAlsoAccepted: {[m
+[32m+[m[32m          client: "João Silva",[m
+[32m+[m[32m          phone: "11999999999",[m
+[32m+[m[32m          address: "Rua A, 123",[m
+[32m+[m[32m          items: [{ name: "Marmita de Frango", price: 18.5, quantity: 2 }],[m
+[32m+[m[32m          total: 37,[m
+[32m+[m[32m          paymentMethod: "Pix",[m
+         },[m
+       },[m
+       {[m
+[36m@@ -308,16 +396,6 @@[m [mrouter.get("/docs", (req: Request, res: Response) => {[m
+         path: "/orders/:id",[m
+         description: "Retorna o status de um pedido",[m
+         authentication: "Não requerida",[m
+[31m-        response: {[m
+[31m-          success: true,[m
+[31m-          data: {[m
+[31m-            id: 123,[m
+[31m-            customerName: "João Silva",[m
+[31m-            status: "em_preparo",[m
+[31m-            totalAmount: "37.00",[m
+[31m-            createdAt: "2026-05-18T15:00:00Z",[m
+[31m-          },[m
+[31m-        },[m
+       },[m
+     ],[m
+   });[m
+[1mdiff --git a/client/src/components/CartDrawer.tsx b/client/src/components/CartDrawer.tsx[m
+[1mindex 39f3161..cbacfb9 100644[m
+[1m--- a/client/src/components/CartDrawer.tsx[m
+[1m+++ b/client/src/components/CartDrawer.tsx[m
+[36m@@ -108,6 +108,7 @@[m [mexport default function CartDrawer({ customerData, onCustomerChange, paymentMeth[m
+         estado: customerData.estado,[m
+       },[m
+       items: items.map((item) => ({[m
+[32m+[m[32m        menuItemId: item.menuItemId,[m
+         name: item.name,[m
+         price: item.price,[m
+         quantity: 1,[m
+[1mdiff --git a/client/src/components/Menu.tsx b/client/src/components/Menu.tsx[m
+[1mindex d2867e6..2ca2e33 100644[m
+[1m--- a/client/src/components/Menu.tsx[m
+[1m+++ b/client/src/components/Menu.tsx[m
+[36m@@ -1,11 +1,13 @@[m
+ /*[m
+  * Menu — Panela Velha[m
+[31m- * Design: cardápio por dias da semana com imagens, bebidas e adicionais[m
+[32m+[m[32m * Exibe o cardápio vindo do painel administrativo quando a API estiver disponível.[m
+[32m+[m[32m * Se a API falhar, mantém o cardápio estático atual como fallback.[m
+  */[m
+[31m-import { ShoppingCart } from "lucide-react";[m
+[32m+[m[32mimport { ShoppingCart, Loader2 } from "lucide-react";[m
+ import { useCart } from "@/contexts/CartContext";[m
+ import { toast } from "sonner";[m
+[31m-import { useState } from "react";[m
+[32m+[m[32mimport { useEffect, useMemo, useState } from "react";[m
+[32m+[m[32mimport { fetchMenuFromAPI, type MenuCategoryFromAPI } from "@/lib/api";[m
+ [m
+ const DAILY_MENU = [[m
+   {[m
+[36m@@ -62,14 +64,120 @@[m [mconst BEVERAGES = [[m
+   { id: "agua-sem-gas", name: "Água sem Gás", size: "500ml", price: 2.5 },[m
+ ];[m
+ [m
+[32m+[m[32mtype SiteMenuItem = {[m
+[32m+[m[32m  key: string;[m
+[32m+[m[32m  categoryName: string;[m
+[32m+[m[32m  label?: string;[m
+[32m+[m[32m  name: string;[m
+[32m+[m[32m  description?: string;[m
+[32m+[m[32m  price: number;[m
+[32m+[m[32m  imageUrl?: string | null;[m
+[32m+[m[32m  menuItemId?: number;[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mtype SiteMenuCategory = {[m
+[32m+[m[32m  id: string;[m
+[32m+[m[32m  name: string;[m
+[32m+[m[32m  description?: string | null;[m
+[32m+[m[32m  items: SiteMenuItem[];[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mfunction normalizeApiMenu(categories: MenuCategoryFromAPI[]): SiteMenuCategory[] {[m
+[32m+[m[32m  return categories[m
+[32m+[m[32m    .map((category) => ({[m
+[32m+[m[32m      id: String(category.id),[m
+[32m+[m[32m      name: category.name,[m
+[32m+[m[32m      description: category.description,[m
+[32m+[m[32m      items: (category.items || [])[m
+[32m+[m[32m        .filter((item) => item.available !== false)[m
+[32m+[m[32m        .map((item) => ({[m
+[32m+[m[32m          key: `api-${item.id}`,[m
+[32m+[m[32m          categoryName: category.name,[m
+[32m+[m[32m          name: item.name,[m
+[32m+[m[32m          description: item.description || undefined,[m
+[32m+[m[32m          price: Number(item.price),[m
+[32m+[m[32m          imageUrl: item.imageUrl || undefined,[m
+[32m+[m[32m          menuItemId: item.id,[m
+[32m+[m[32m        }))[m
+[32m+[m[32m        .filter((item) => Number.isFinite(item.price) && item.price > 0),[m
+[32m+[m[32m    }))[m
+[32m+[m[32m    .filter((category) => category.items.length > 0);[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction getFallbackMenu(): SiteMenuCategory[] {[m
+[32m+[m[32m  return [[m
+[32m+[m[32m    {[m
+[32m+[m[32m      id: "semana",[m
+[32m+[m[32m      name: "Cardápio da Semana",[m
+[32m+[m[32m      items: DAILY_MENU.map((item) => ({[m
+[32m+[m[32m        key: `fallback-${item.day}`,[m
+[32m+[m[32m        categoryName: "Cardápio da Semana",[m
+[32m+[m[32m        label: item.day,[m
+[32m+[m[32m        name: item.dish,[m
+[32m+[m[32m        description: item.description,[m
+[32m+[m[32m        price: item.price,[m
+[32m+[m[32m        imageUrl: item.image,[m
+[32m+[m[32m      })),[m
+[32m+[m[32m    },[m
+[32m+[m[32m    {[m
+[32m+[m[32m      id: "bebidas",[m
+[32m+[m[32m      name: "Bebidas",[m
+[32m+[m[32m      items: BEVERAGES.map((item) => ({[m
+[32m+[m[32m        key: `fallback-${item.id}`,[m
+[32m+[m[32m        categoryName: "Bebidas",[m
+[32m+[m[32m        name: item.name,[m
+[32m+[m[32m        description: item.size,[m
+[32m+[m[32m        price: item.price,[m
+[32m+[m[32m      })),[m
+[32m+[m[32m    },[m
+[32m+[m[32m  ];[m
+[32m+[m[32m}[m
+[32m+[m
+ export default function Menu() {[m
+   const { addItem } = useCart();[m
+[31m-  const [expandedDay, setExpandedDay] = useState<string | null>("Segunda-Feira");[m
+[32m+[m[32m  const [apiCategories, setApiCategories] = useState<SiteMenuCategory[]>([]);[m
+[32m+[m[32m  const [isLoadingMenu, setIsLoadingMenu] = useState(true);[m
+[32m+[m[32m  const [usingFallback, setUsingFallback] = useState(false);[m
+[32m+[m
+[32m+[m[32m  useEffect(() => {[m
+[32m+[m[32m    let isMounted = true;[m
+[32m+[m
+[32m+[m[32m    fetchMenuFromAPI()[m
+[32m+[m[32m      .then((categories) => {[m
+[32m+[m[32m        if (!isMounted) return;[m
+[32m+[m[32m        const normalized = normalizeApiMenu(categories);[m
+[32m+[m[32m        if (normalized.length > 0) {[m
+[32m+[m[32m          setApiCategories(normalized);[m
+[32m+[m[32m          setUsingFallback(false);[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m          setApiCategories(getFallbackMenu());[m
+[32m+[m[32m          setUsingFallback(true);[m
+[32m+[m[32m        }[m
+[32m+[m[32m      })[m
+[32m+[m[32m      .catch((error) => {[m
+[32m+[m[32m        console.warn("Não foi possível carregar o cardápio do painel. Usando fallback local.", error);[m
+[32m+[m[32m        if (!isMounted) return;[m
+[32m+[m[32m        setApiCategories(getFallbackMenu());[m
+[32m+[m[32m        setUsingFallback(true);[m
+[32m+[m[32m      })[m
+[32m+[m[32m      .finally(() => {[m
+[32m+[m[32m        if (isMounted) setIsLoadingMenu(false);[m
+[32m+[m[32m      });[m
+[32m+[m
+[32m+[m[32m    return () => {[m
+[32m+[m[32m      isMounted = false;[m
+[32m+[m[32m    };[m
+[32m+[m[32m  }, []);[m
+ [m
+[31m-  const handleAdd = (name: string, price: number) => {[m
+[31m-    addItem({ name, price });[m
+[31m-    toast.success(`${name} adicionado!`, {[m
+[31m-      description: `R$ ${price.toFixed(2).replace(".", ",")}`,[m
+[32m+[m[32m  const categories = useMemo([m
+[32m+[m[32m    () => (apiCategories.length > 0 ? apiCategories : getFallbackMenu()),[m
+[32m+[m[32m    [apiCategories][m
+[32m+[m[32m  );[m
+[32m+[m
+[32m+[m[32m  const handleAdd = (item: SiteMenuItem) => {[m
+[32m+[m[32m    addItem({ name: item.name, price: item.price, menuItemId: item.menuItemId });[m
+[32m+[m[32m    toast.success(`${item.name} adicionado!`, {[m
+[32m+[m[32m      description: `R$ ${item.price.toFixed(2).replace(".", ",")}`,[m
+       duration: 2000,[m
+     });[m
+   };[m
+[36m@@ -78,100 +186,94 @@[m [mexport default function Menu() {[m
+     <section id="cardapio" className="bg-[#FAFAF7] py-16">[m
+       <div className="container">[m
+         <h2[m
+[31m-          className="section-title text-2xl font-bold text-[#2C1810] mb-10"[m
+[32m+[m[32m          className="section-title text-2xl font-bold text-[#2C1810] mb-3"[m
+           style={{ fontFamily: "var(--font-display)" }}[m
+         >[m
+[31m-          Cardápio da Semana[m
+[32m+[m[32m          Cardápio[m
+         </h2>[m
+[32m+[m[32m        <p className="text-sm text-[#7A6555] mb-10">[m
+[32m+[m[32m          {usingFallback[m
+[32m+[m[32m            ? "Cardápio temporário exibido enquanto o painel administrativo não responde."[m
+[32m+[m[32m            : "Pratos sincronizados automaticamente com o painel administrativo."}[m
+[32m+[m[32m        </p>[m
+ [m
+[31m-        {/* Daily Menu */}[m
+[31m-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">[m
+[31m-          {DAILY_MENU.map((item) => ([m
+[31m-            <div[m
+[31m-              key={item.day}[m
+[31m-              className="product-card bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EDE8E2] fade-in-up"[m
+[31m-            >[m
+[31m-              {/* Image */}[m
+[31m-              <img[m
+[31m-                src={item.image}[m
+[31m-                alt={item.dish}[m
+[31m-                className="w-full h-64 object-cover"[m
+[31m-                loading="lazy"[m
+[31m-              />[m
+[31m-[m
+[31m-              {/* Content */}[m
+[31m-              <div className="p-5">[m
+[31m-                <p className="text-xs font-bold text-[#E8521A] uppercase tracking-widest mb-1">[m
+[31m-                  {item.day}[m
+[31m-                </p>[m
+[32m+[m[32m        {isLoadingMenu ? ([m
+[32m+[m[32m          <div className="flex items-center justify-center py-12 text-[#E8521A]">[m
+[32m+[m[32m            <Loader2 className="w-6 h-6 animate-spin mr-2" />[m
+[32m+[m[32m            <span className="text-sm font-semibold">Carregando cardápio...</span>[m
+[32m+[m[32m          </div>[m
+[32m+[m[32m        ) : ([m
+[32m+[m[32m          <div className="space-y-12">[m
+[32m+[m[32m            {categories.map((category) => ([m
+[32m+[m[32m              <div key={category.id}>[m
+                 <h3[m
+[31m-                  className="text-lg font-bold text-[#2C1810] mb-1"[m
+[32m+[m[32m                  className="section-title text-xl font-bold text-[#2C1810] mb-6"[m
+                   style={{ fontFamily: "var(--font-display)" }}[m
+                 >[m
+[31m-                  {item.dish}[m
+[32m+[m[32m                  {category.name}[m
+                 </h3>[m
+[31m-                <p className="text-sm text-[#7A6555] mb-4 leading-relaxed">[m
+[31m-                  {item.description}[m
+[31m-                </p>[m
+[31m-[m
+[31m-                <div className="flex items-center justify-between">[m
+[31m-                  <span[m
+[31m-                    className="text-2xl font-bold text-[#E8521A]"[m
+[31m-                    style={{ fontFamily: "var(--font-display)" }}[m
+[31m-                  >[m
+[31m-                    R$ {item.price.toFixed(2).replace(".", ",")}[m
+[31m-                  </span>[m
+[31m-                  <button[m
+[31m-                    onClick={() => handleAdd(item.dish, item.price)}[m
+[31m-                    className="flex items-center gap-2 bg-[#E8521A] hover:bg-[#C94415] active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all duration-150"[m
+[31m-                  >[m
+[31m-                    <ShoppingCart size={15} />[m
+[31m-                    Adicionar[m
+[31m-                  </button>[m
+[31m-                </div>[m
+[31m-              </div>[m
+[31m-            </div>[m
+[31m-          ))}[m
+[31m-        </div>[m
+[31m-[m
+[31m-        {/* Beverages Section */}[m
+[31m-        <div className="mt-12">[m
+[31m-          <h3[m
+[31m-            className="section-title text-xl font-bold text-[#2C1810] mb-6"[m
+[31m-            style={{ fontFamily: "var(--font-display)" }}[m
+[31m-          >[m
+[31m-            Bebidas[m
+[31m-          </h3>[m
+[31m-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">[m
+[31m-            {BEVERAGES.map((beverage) => ([m
+[31m-              <div[m
+[31m-                key={beverage.id}[m
+[31m-                className="bg-white rounded-xl border border-[#EDE8E2] p-4 flex items-center justify-between hover:shadow-md transition-shadow"[m
+[31m-              >[m
+[31m-                <div>[m
+[31m-                  <p className="text-sm font-semibold text-[#2C1810]">[m
+[31m-                    {beverage.name}[m
+[31m-                  </p>[m
+[31m-                  {beverage.size && ([m
+[31m-                    <p className="text-xs text-[#7A6555] mt-0.5">[m
+[31m-                      {beverage.size}[m
+[31m-                    </p>[m
+[31m-                  )}[m
+[31m-                  <p className="text-xs text-[#E8521A] font-bold mt-1">[m
+[31m-                    R$ {beverage.price.toFixed(2).replace(".", ",")}[m
+[31m-                  </p>[m
+[32m+[m[32m                {category.description && ([m
+[32m+[m[32m                  <p className="text-sm text-[#7A6555] -mt-4 mb-6">{category.description}</p>[m
+[32m+[m[32m                )}[m
+[32m+[m
+[32m+[m[32m                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">[m
+[32m+[m[32m                  {category.items.map((item) => ([m
+[32m+[m[32m                    <div[m
+[32m+[m[32m                      key={item.key}[m
+[32m+[m[32m                      className="product-card bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EDE8E2] fade-in-up"[m
+[32m+[m[32m                    >[m
+[32m+[m[32m                      {item.imageUrl ? ([m
+[32m+[m[32m                        <img[m
+[32m+[m[32m                          src={item.imageUrl}[m
+[32m+[m[32m                          alt={item.name}[m
+[32m+[m[32m                          className="w-full h-64 object-cover"[m
+[32m+[m[32m                          loading="lazy"[m
+[32m+[m[32m                        />[m
+[32m+[m[32m                      ) : ([m
+[32m+[m[32m                        <div className="w-full h-40 bg-[#F0EDE8] flex items-center justify-center text-[#B0A090] text-sm font-semibold">[m
+[32m+[m[32m                          Imagem não cadastrada[m
+[32m+[m[32m                        </div>[m
+[32m+[m[32m                      )}[m
+[32m+[m
+[32m+[m[32m                      <div className="p-5">[m
+[32m+[m[32m                        <p className="text-xs font-bold text-[#E8521A] uppercase tracking-widest mb-1">[m
+[32m+[m[32m                          {item.label || item.categoryName}[m
+[32m+[m[32m                        </p>[m
+[32m+[m[32m                        <h4[m
+[32m+[m[32m                          className="text-lg font-bold text-[#2C1810] mb-1"[m
+[32m+[m[32m                          style={{ fontFamily: "var(--font-display)" }}[m
+[32m+[m[32m                        >[m
+[32m+[m[32m                          {item.name}[m
+[32m+[m[32m                        </h4>[m
+[32m+[m[32m                        {item.description && ([m
+[32m+[m[32m                          <p className="text-sm text-[#7A6555] mb-4 leading-relaxed">[m
+[32m+[m[32m                            {item.description}[m
+[32m+[m[32m                          </p>[m
+[32m+[m[32m                        )}[m
+[32m+[m
+[32m+[m[32m                        <div className="flex items-center justify-between">[m
+[32m+[m[32m                          <span[m
+[32m+[m[32m                            className="text-2xl font-bold text-[#E8521A]"[m
+[32m+[m[32m                            style={{ fontFamily: "var(--font-display)" }}[m
+[32m+[m[32m                          >[m
+[32m+[m[32m                            R$ {item.price.toFixed(2).replace(".", ",")}[m
+[32m+[m[32m                          </span>[m
+[32m+[m[32m                          <button[m
+[32m+[m[32m                            onClick={() => handleAdd(item)}[m
+[32m+[m[32m                            className="flex items-center gap-2 bg-[#E8521A] hover:bg-[#C94415] active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all duration-150"[m
+[32m+[m[32m                          >[m
+[32m+[m[32m                            <ShoppingCart size={15} />[m
+[32m+[m[32m                            Adicionar[m
+[32m+[m[32m                          </button>[m
+[32m+[m[32m                        </div>[m
+[32m+[m[32m                      </div>[m
+[32m+[m[32m                    </div>[m
+[32m+[m[32m                  ))}[m
+                 </div>[m
+[31m-                <button[m
+[31m-                  onClick={() => handleAdd(beverage.name, beverage.price)}[m
+[31m-                  className="flex items-center gap-1 bg-[#E8521A] hover:bg-[#C94415] active:scale-95 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150"[m
+[31m-                >[m
+[31m-                  <ShoppingCart size={13} />[m
+[31m-                  Add[m
+[31m-                </button>[m
+               </div>[m
+             ))}[m
+           </div>[m
+[31m-        </div>[m
+[32m+[m[32m        )}[m
+       </div>[m
+     </section>[m
+   );[m
+[1mdiff --git a/client/src/contexts/CartContext.tsx b/client/src/contexts/CartContext.tsx[m
+[1mindex 3fe925c..b6c3140 100644[m
+[1m--- a/client/src/contexts/CartContext.tsx[m
+[1m+++ b/client/src/contexts/CartContext.tsx[m
+[36m@@ -8,6 +8,7 @@[m [mexport interface CartItem {[m
+   id: string;[m
+   name: string;[m
+   price: number;[m
+[32m+[m[32m  menuItemId?: number;[m
+ }[m
+ [m
+ export interface CustomerAddress {[m
+[1mdiff --git a/client/src/lib/api.ts b/client/src/lib/api.ts[m
+[1mindex 67ce2ae..4b94ba0 100644[m
+[1m--- a/client/src/lib/api.ts[m
+[1m+++ b/client/src/lib/api.ts[m
+[36m@@ -1,17 +1,38 @@[m
+ /*[m
+  * API Integration - Panela Velha[m
+  * Envia pedidos do site para o painel de administração via API REST[m
+[32m+[m[32m * e carrega o cardápio público quando disponível.[m
+  */[m
+ [m
+ import { toast } from "sonner";[m
+ [m
+[31m-// Configuração da URL da API do painel[m
+[31m-const PAINEL_API_URL = "https://panelavelha-bbdz2awd.manus.space/api/orders";[m
+[32m+[m[32mconst DEFAULT_PAINEL_API_URL = "https://panelavelha-2cnz98kw.manus.space/api/integration";[m
+[32m+[m[32mconst configuredUrl = import.meta.env.VITE_PAINEL_API_URL as string | undefined;[m
+[32m+[m[32mexport const PAINEL_API_URL = (configuredUrl || DEFAULT_PAINEL_API_URL).replace(/\/$/, "");[m
+[32m+[m
+[32m+[m[32mexport interface MenuItemFromAPI {[m
+[32m+[m[32m  id: number;[m
+[32m+[m[32m  categoryId: number;[m
+[32m+[m[32m  name: string;[m
+[32m+[m[32m  description?: string | null;[m
+[32m+[m[32m  price: string | number;[m
+[32m+[m[32m  imageUrl?: string | null;[m
+[32m+[m[32m  available?: boolean;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mexport interface MenuCategoryFromAPI {[m
+[32m+[m[32m  id: number;[m
+[32m+[m[32m  name: string;[m
+[32m+[m[32m  description?: string | null;[m
+[32m+[m[32m  items: MenuItemFromAPI[];[m
+[32m+[m[32m}[m
+ [m
+ export interface OrderItem {[m
+[32m+[m[32m  menuItemId?: number;[m
+   name: string;[m
+   price: number;[m
+   quantity?: number;[m
+[32m+[m[32m  notes?: string;[m
+ }[m
+ [m
+ export interface OrderData {[m
+[36m@@ -39,16 +60,61 @@[m [mexport interface OrderData {[m
+   total: number;[m
+ }[m
+ [m
+[32m+[m[32mexport async function fetchMenuFromAPI(): Promise<MenuCategoryFromAPI[]> {[m
+[32m+[m[32m  const response = await fetch(`${PAINEL_API_URL}/menu`, {[m
+[32m+[m[32m    method: "GET",[m
+[32m+[m[32m    headers: {[m
+[32m+[m[32m      Accept: "application/json",[m
+[32m+[m[32m    },[m
+[32m+[m[32m  });[m
+[32m+[m
+[32m+[m[32m  if (!response.ok) {[m
+[32m+[m[32m    throw new Error(`Erro ao carregar cardápio: ${response.status}`);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const result = await response.json();[m
+[32m+[m[32m  if (!result.success || !Array.isArray(result.data)) {[m
+[32m+[m[32m    throw new Error(result.error || "Resposta inválida da API de cardápio");[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  return result.data;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction formatAddress(orderData: OrderData): string {[m
+[32m+[m[32m  return `${orderData.clientAddress.rua}, ${orderData.clientAddress.numero}${orderData.clientAddress.complemento ? " - " + orderData.clientAddress.complemento : ""} - ${orderData.clientAddress.cep} - ${orderData.clientAddress.cidade}/${orderData.clientAddress.estado}`;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mfunction buildOrderNotes(orderData: OrderData): string {[m
+[32m+[m[32m  const extrasList = [[m
+[32m+[m[32m    orderData.extras.utensil ? "Talher" : null,[m
+[32m+[m[32m    orderData.extras.extraSalad ? "Salada extra" : null,[m
+[32m+[m[32m    orderData.extras.potatoSize ? `Batata frita ${orderData.extras.potatoSize}` : null,[m
+[32m+[m[32m  ][m
+[32m+[m[32m    .filter(Boolean)[m
+[32m+[m[32m    .join(", ");[m
+[32m+[m
+[32m+[m[32m  return [[m
+[32m+[m[32m    `Endereço: ${formatAddress(orderData)}`,[m
+[32m+[m[32m    extrasList ? `Adicionais: ${extrasList}` : null,[m
+[32m+[m[32m    `Subtotal: R$ ${orderData.subtotal.toFixed(2)}`,[m
+[32m+[m[32m    `Frete: R$ ${orderData.shipping.toFixed(2)}`,[m
+[32m+[m[32m    orderData.discount > 0 ? `Desconto: R$ ${orderData.discount.toFixed(2)}` : null,[m
+[32m+[m[32m    orderData.changeValue ? `Troco para: R$ ${orderData.changeValue.toFixed(2)}` : null,[m
+[32m+[m[32m  ][m
+[32m+[m[32m    .filter(Boolean)[m
+[32m+[m[32m    .join("\n");[m
+[32m+[m[32m}[m
+[32m+[m
+ /**[m
+[31m- * Envia pedido para a API do painel[m
+[32m+[m[32m * Envia pedido para a API pública do painel.[m
+  */[m
+ export async function sendOrderToAPI(orderData: OrderData): Promise<boolean> {[m
+   try {[m
+[31m-    // Validar dados do pedido[m
+     if ([m
+       !orderData.clientName ||[m
+       !orderData.clientPhone ||[m
+       !orderData.items ||[m
+[32m+[m[32m      orderData.items.length === 0 ||[m
+       orderData.total <= 0[m
+     ) {[m
+       console.error("Dados do pedido incompletos");[m
+[36m@@ -58,23 +124,32 @@[m [mexport async function sendOrderToAPI(orderData: OrderData): Promise<boolean> {[m
+       return false;[m
+     }[m
+ [m
+[31m-    // Preparar dados para enviar à API (formato simplificado)[m
+     const apiOrder = {[m
+[31m-      id: `web-${Date.now()}`,[m
+[31m-      client: orderData.clientName,[m
+[31m-      phone: orderData.clientPhone,[m
+[31m-      address: `${orderData.clientAddress.rua}, ${orderData.clientAddress.numero}${orderData.clientAddress.complemento ? " - " + orderData.clientAddress.complemento : ""} - ${orderData.clientAddress.cep} - ${orderData.clientAddress.cidade}/${orderData.clientAddress.estado}`,[m
+[31m-      items: orderData.items.map((item) => `${item.name} (1x)`).join(", "),[m
+[31m-      total: orderData.total,[m
+[32m+[m[32m      customerName: orderData.clientName,[m
+[32m+[m[32m      customerPhone: orderData.clientPhone,[m
+[32m+[m[32m      address: orderData.clientAddress,[m
+[32m+[m[32m      notes: buildOrderNotes(orderData),[m
+       paymentMethod: orderData.paymentMethod || "Não especificado",[m
+[31m-      status: "pending",[m
+[32m+[m[32m      subtotal: orderData.subtotal,[m
+[32m+[m[32m      shipping: orderData.shipping,[m
+[32m+[m[32m      discount: orderData.discount,[m
+[32m+[m[32m      total: orderData.total,[m
+[32m+[m[32m      changeValue: orderData.changeValue,[m
+       source: "website",[m
+[32m+[m[32m      items: orderData.items.map((item) => ({[m
+[32m+[m[32m        menuItemId: item.menuItemId,[m
+[32m+[m[32m        productName: item.name,[m
+[32m+[m[32m        name: item.name,[m
+[32m+[m[32m        quantity: item.quantity || 1,[m
+[32m+[m[32m        unitPrice: item.price,[m
+[32m+[m[32m        price: item.price,[m
+[32m+[m[32m        notes: item.notes,[m
+[32m+[m[32m      })),[m
+     };[m
+ [m
+     console.log("Enviando pedido para o painel...", apiOrder);[m
+ [m
+[31m-    // Requisição POST para a API[m
+[31m-    const response = await fetch(PAINEL_API_URL, {[m
+[32m+[m[32m    const response = await fetch(`${PAINEL_API_URL}/orders`, {[m
+       method: "POST",[m
+       headers: {[m
+         "Content-Type": "application/json",[m
+[36m@@ -82,23 +157,17 @@[m [mexport async function sendOrderToAPI(orderData: OrderData): Promise<boolean> {[m
+       body: JSON.stringify(apiOrder),[m
+     });[m
+ [m
+[31m-    // Verificar resposta da API[m
+[31m-    if (!response.ok) {[m
+[31m-      throw new Error(`HTTP error! status: ${response.status}`);[m
+[31m-    }[m
+[31m-[m
+[31m-    const result = await response.json();[m
+[32m+[m[32m    const result = await response.json().catch(() => ({}));[m
+ [m
+[31m-    if (result.success || response.ok) {[m
+[31m-      console.log("Pedido enviado com sucesso!", result);[m
+[31m-      toast.success("Pedido recebido!", {[m
+[31m-        description:[m
+[31m-          "Seu pedido foi enviado para o painel. Acompanhe o status no WhatsApp.",[m
+[31m-      });[m
+[31m-      return true;[m
+[31m-    } else {[m
+[31m-      throw new Error(result.error || "Erro desconhecido");[m
+[32m+[m[32m    if (!response.ok || result.success === false) {[m
+[32m+[m[32m      throw new Error(result.error || `HTTP error! status: ${response.status}`);[m
+     }[m
+[32m+[m
+[32m+[m[32m    console.log("Pedido enviado com sucesso!", result);[m
+[32m+[m[32m    toast.success("Pedido recebido!", {[m
+[32m+[m[32m      description: "Seu pedido foi enviado para o painel. Acompanhe o status no WhatsApp.",[m
+[32m+[m[32m    });[m
+[32m+[m[32m    return true;[m
+   } catch (error) {[m
+     console.error("Erro ao enviar pedido:", error);[m
+     toast.error("Erro ao enviar pedido", {[m
+[36m@@ -113,7 +182,7 @@[m [mexport async function sendOrderToAPI(orderData: OrderData): Promise<boolean> {[m
+  */[m
+ export function sendOrderViaWhatsApp(orderData: OrderData): void {[m
+   const phoneNumber = "5511941462504"; // Número do restaurante[m
+[31m-  const address = `${orderData.clientAddress.rua}, ${orderData.clientAddress.numero}${orderData.clientAddress.complemento ? " - " + orderData.clientAddress.complemento : ""} - ${orderData.clientAddress.cep} - ${orderData.clientAddress.cidade}/${orderData.clientAddress.estado}`;[m
+[32m+[m[32m  const address = formatAddress(orderData);[m
+ [m
+   const itemsList = orderData.items[m
+     .map((item) => {[m
