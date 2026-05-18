@@ -1,0 +1,43 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [
+    "server",
+    "db",
+    "user"
+  ],
+  "dev_command": "pnpm run dev",
+  "env_vars": {
+    "DATABASE_URL": "mysql://ZMvJeJ5FRjcHBb4.root:BbtyHDb0hh4J0v190eAB@gateway06.us-east-1.prod.aws.tidbcloud.com:4000/2CNZ98KWeQVj82iQy6kc43?ssl={\"rejectUnauthorized\":true}"
+  },
+  "experiments": [
+    "no_db_push"
+  ],
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310519663672531343/2CNZ98KWeQVj82iQy6kc43",
+    "access_key_id": "ASIAZV3A2ECZEGEWDDAK",
+    "secret_access_key": "lN05/r0IdBfF0yQtH0Zjr9l42NArASxAFFmHwc6c",
+    "session_token": "IQoJb3JpZ2luX2VjEPj//////////wEaCXVzLWVhc3QtMSJIMEYCIQCOos0IupHxUeVPlNO5zBDe3i7Y69uHZuuMpDXlYSoWVQIhAPYwxgp29dKU2Hfl9Mf/mFLupyVrUgj6REVA//48dw2xKv4DCMH//////////wEQBBoMNjY1Mzg2MDk4ODY2IgxjO/mhrZ0OQEgANPMq0gMBUns2qbi3Scc1IoQuMda4e5ssj2I8F7I2QDxt5wPhkHWvTxe5SaCis1AxxvG+gr48u4lJKrkDxgUQL51DeWe4NvbegnuY37EqNN+Kpxgnif7BDfluboRWjl4AA1OzlFdEbu3X4vm8Z4qJE9fNKv0RwrsjLQOgpBDES5bs0zbZn5YSv+k95kBgYadQELJX2mkQ24ADh82OC8H9kNIrx4ziW5ZcwxKVqjvQzXSytu1M2pe3sWl1i+JtPBEaT0FERPbmTK9xuj7LoXALl/gr4gFJlfZaJB9yexu3p7ExLNO4if2OhlgEZP2jBKWnOfg41Oj/7fAN25Z62OtccHZy/HNOlj9/yV/7N7Jg3DHgXXHLKe8gkFJJJHmcUQ8Fuj5PPbMcNjwRw1xF4Btf8XB0S7yIWeXRxPCGDyekDAxF7hmx5RfkFYBuomPcleLhCz2eCDsoLqGW2ovUla2l+dczlmIFIyqE3otexlw2PQ/lcEQBgPIeVFJq2MHXU65QiWc2uq/SQ/8ORmafL97+9dHYbgcO1frKxMvhh2GeBwH+sxW1W/aDI9PmxVVmz9GkmGui3He/rH76eDPagGiXy/lXPMIMj/Sbgqy2yGUyCopQtDBv/tRvMIzlrNAGOpwBwetYJUQiBmjGNsiB0Y6dFslt8SHOS/sGWxBi+V2phY3NGwi/GKcxT1BSGwV0Hdz+ojtsMGqjdovggaGvcOk3xItde2RjrTjvGPjEBZNOqIFn+HWQJwkZYlALCunhxAwqRHN66nytssTZyxW/uRUuP89ARq87igWyu3A4HeS++Q5FVoUEAbQ0Jtxpq6C2HO2w8wMZnn2fcG+hLqSw",
+    "expiration": "2026-05-19T03:38:52.000Z"
+  },
+  "name": "panela-velha-admin",
+  "path": "/home/ubuntu/panela-velha-admin",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "3dJiBesuoayGABVUp35uDQ",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "2M5u4sdQbJGjq5BkPXpKgU",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Miranda Coelho",
+    "OWNER_OPEN_ID": "QHfuZXVpBkoQ6tkaKQN4t2",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "589a819f-fee0-4e9b-8b8d-3938ca94bfe3",
+    "VITE_APP_ID": "2CNZ98KWeQVj82iQy6kc43",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "Panela Velha Admin",
+    "VITE_FRONTEND_FORGE_API_KEY": "YsYPhsg4LTYESFztfXRA2N",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-db-user",
+  "test_command": "pnpm test"
+}
