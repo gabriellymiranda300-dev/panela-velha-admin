@@ -33,6 +33,7 @@ import {
   EyeOff,
   Loader2,
   DollarSign,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -178,6 +179,21 @@ export default function Cardapio() {
                     <Card key={item.id} className={`hover:shadow-md transition-shadow ${!item.available ? "opacity-60" : ""}`}>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-4">
+                          <div className="w-24 h-24 rounded-xl overflow-hidden bg-muted shrink-0 border border-border">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
+                                <ImageIcon className="w-5 h-5 opacity-50" />
+                                <span className="text-[10px]">Sem foto</span>
+                              </div>
+                            )}
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-semibold text-foreground truncate">{item.name}</p>
@@ -312,6 +328,7 @@ function ItemDialog({ open, item, categories, onClose, onSuccess }: any) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [available, setAvailable] = useState(true);
 
   useEffect(() => {
@@ -320,12 +337,14 @@ function ItemDialog({ open, item, categories, onClose, onSuccess }: any) {
       setName(item.name);
       setDescription(item.description || "");
       setPrice(item.price);
+      setImageUrl(item.imageUrl || "");
       setAvailable(item.available);
     } else if (open && !item) {
       setCategoryId("");
       setName("");
       setDescription("");
       setPrice("");
+      setImageUrl("");
       setAvailable(true);
     }
   }, [open, item]);
@@ -348,6 +367,7 @@ function ItemDialog({ open, item, categories, onClose, onSuccess }: any) {
       name,
       description: description || undefined,
       price: String(price),
+      imageUrl: imageUrl.trim() || undefined,
       available,
     };
     if (item) update.mutate({ id: item.id, ...payload });
@@ -386,6 +406,15 @@ function ItemDialog({ open, item, categories, onClose, onSuccess }: any) {
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Preço (R$) *</label>
             <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} min="0.01" step="0.01" placeholder="0,00" />
           </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">URL da foto do prato</label>
+            <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://.../foto-do-prato.webp" />
+            {imageUrl.trim() && (
+              <div className="mt-2 rounded-xl overflow-hidden border border-border bg-muted h-36">
+                <img src={imageUrl} alt="Prévia do prato" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
             <input
               type="checkbox"
@@ -407,3 +436,4 @@ function ItemDialog({ open, item, categories, onClose, onSuccess }: any) {
     </Dialog>
   );
 }
+
