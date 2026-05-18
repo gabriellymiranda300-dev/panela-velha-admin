@@ -67,3 +67,22 @@
 ## Testes
 - [x] Testes unitários para procedimentos tRPC principais
 - [x] Teste de autenticação e proteção de rotas
+
+## Módulo de Cardápio
+- [x] Tabela `menu_items` (pratos com nome, descrição, preço, categoria, disponibilidade)
+- [x] Tabela `menu_categories` (categorias de pratos)
+- [x] Página de gestão de cardápio com CRUD de pratos
+- [x] Formulário de cadastro/edição de prato
+- [x] Toggle de disponibilidade por dia
+- [x] Upload de imagem do prato
+- [x] Listagem de pratos com filtro por categoria
+- [x] Procedimentos tRPC: list, create, update, delete, toggleAvailability
+
+## Integração com Site dos Clientes
+- [x] API endpoint público para listar cardápio (sem autenticação)
+- [x] API endpoint público para criar pedido a partir do site
+- [x] Campo `source` em pedidos (admin ou website)
+- [x] Sincronização automática de pedidos do site para o painel
+- [x] Webhook de notificação quando pedido é criado no site
+- [x] Documentação da API de integração
+- [x] Teste de integração entre os dois sites

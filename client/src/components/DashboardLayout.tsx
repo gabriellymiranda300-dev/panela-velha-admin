@@ -33,6 +33,7 @@ import {
   ChefHat,
   ExternalLink,
   Bell,
+  UtensilsCrossed,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
@@ -45,6 +46,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: ClipboardList, label: "Pedidos", path: "/pedidos" },
   { icon: Package, label: "Estoque", path: "/estoque" },
+  { icon: ChefHat, label: "Cardápio", path: "/cardapio" },
   { icon: DollarSign, label: "Fluxo de Caixa", path: "/caixa" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
 ];

@@ -36,6 +36,7 @@ export const orders = mysqlTable("orders", {
   totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }).notNull().default("0.00"),
   notes: text("notes"),
   paymentMethod: varchar("paymentMethod", { length: 50 }),
+  source: mysqlEnum("source", ["admin", "website"]).default("admin").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -101,3 +102,33 @@ export const cashTransactions = mysqlTable("cash_transactions", {
 
 export type CashTransaction = typeof cashTransactions.$inferSelect;
 export type InsertCashTransaction = typeof cashTransactions.$inferInsert;
+
+// ─── Cardápio ────────────────────────────────────────────────────────────────
+
+export const menuCategories = mysqlTable("menu_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MenuCategory = typeof menuCategories.$inferSelect;
+export type InsertMenuCategory = typeof menuCategories.$inferInsert;
+
+export const menuItems = mysqlTable("menu_items", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("categoryId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  available: boolean("available").default(true).notNull(),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MenuItem = typeof menuItems.$inferSelect;
+export type InsertMenuItem = typeof menuItems.$inferInsert;

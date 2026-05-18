@@ -10,6 +10,7 @@ import Pedidos from "./pages/Pedidos";
 import Estoque from "./pages/Estoque";
 import Caixa from "./pages/Caixa";
 import Relatorios from "./pages/Relatorios";
+import Cardapio from "./pages/Cardapio";
 import { useAuth } from "./_core/hooks/useAuth";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -90,6 +91,9 @@ function Router() {
       </Route>
       <Route path="/relatorios">
         {() => <ProtectedRoute component={Relatorios} />}
+      </Route>
+      <Route path="/cardapio">
+        {() => <ProtectedRoute component={Cardapio} />}
       </Route>
       <Route path="/acesso-negado" component={AcessoNegado} />
       <Route path="/404" component={NotFound} />

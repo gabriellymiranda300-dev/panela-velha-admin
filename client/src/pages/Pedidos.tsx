@@ -29,6 +29,8 @@ import {
   User,
   StickyNote,
   CreditCard,
+  Globe,
+  Smartphone,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -160,6 +162,12 @@ export default function Pedidos() {
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${s.className}`}>
                               {s.label}
                             </span>
+                            {order.source === "website" && (
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-1">
+                                <Globe className="w-3 h-3" />
+                                Site
+                              </span>
+                            )}
                             {order.customerPhone && (
                               <span className="text-xs text-muted-foreground">{order.customerPhone}</span>
                             )}

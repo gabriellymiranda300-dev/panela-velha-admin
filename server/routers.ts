@@ -215,6 +215,74 @@ export const appRouter = router({
       }),
   }),
 
+  // ─── Menu ─────────────────────────────────────────────────────────────────
+  menu: router({
+    categories: adminProcedure.query(async () => {
+      const { getMenuCategories } = await import("./db-menu");
+      return getMenuCategories();
+    }),
+
+    items: adminProcedure.query(async () => {
+      const { getMenuItems } = await import("./db-menu");
+      return getMenuItems();
+    }),
+
+    createCategory: adminProcedure
+      .input(z.object({ name: z.string().min(1), description: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const { createMenuCategory } = await import("./db-menu");
+        await createMenuCategory({ ...input, displayOrder: 0 });
+        return { success: true };
+      }),
+
+    updateCategory: adminProcedure
+      .input(z.object({ id: z.number(), name: z.string().min(1).optional(), description: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const { updateMenuCategory } = await import("./db-menu");
+        const { id, ...data } = input;
+        await updateMenuCategory(id, data);
+        return { success: true };
+      }),
+
+    deleteCategory: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteMenuCategory } = await import("./db-menu");
+        await deleteMenuCategory(input.id);
+        return { success: true };
+      }),
+
+    createItem: adminProcedure
+      .input(z.object({ categoryId: z.number(), name: z.string().min(1), description: z.string().optional(), price: z.string(), imageUrl: z.string().optional(), available: z.boolean().optional() }))
+      .mutation(async ({ input }) => {
+        const { createMenuItem } = await import("./db-menu");
+        await createMenuItem({ ...input, displayOrder: 0, available: input.available ?? true });
+        return { success: true };
+      }),
+
+    updateItem: adminProcedure
+      .input(z.object({ id: z.number(), categoryId: z.number().optional(), name: z.string().optional(), description: z.string().optional(), price: z.string().optional(), imageUrl: z.string().optional(), available: z.boolean().optional() }))
+      .mutation(async ({ input }) => {
+        const { updateMenuItem } = await import("./db-menu");
+        const { id, ...data } = input;
+        await updateMenuItem(id, data);
+        return { success: true };
+      }),
+
+    deleteItem: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const { deleteMenuItem } = await import("./db-menu");
+        await deleteMenuItem(input.id);
+        return { success: true };
+      }),
+
+    publicMenu: publicProcedure.query(async () => {
+      const { getAvailableMenuWithCategories } = await import("./db-menu");
+      return getAvailableMenuWithCategories();
+    }),
+  }),
+
   // ─── Reports ───────────────────────────────────────────────────────────────
   reports: router({
     salesChart: adminProcedure
